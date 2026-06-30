@@ -7,10 +7,13 @@ TELEGRAM_TOKEN = "8546144054:AAGUDXlQSWuKV9rY88njCc9CFGPuG9aL_A0"
 CHAT_ID = "1032063964"
 
 # GÜVENLİ LİNKLER: Amazon'un engellemediği kategori vitrin linkleri (/b/ formatı)
-# İleride beğendiğin kategorilerin linklerini aralarına virgül koyarak bu listeye ekleyebilirsin.
 HEDEF_URLLER = [
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=27149247031",  # El Aletleri
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12466724031"   # Yapı Market Ana Sayfa
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=27149247031",  # 1. El Aletleri
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12466724031",  # 2. Yapı Market Ana Sayfa
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12601898031",  # 3. Bilgisayar ve Bileşenleri
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=13730623031",  # 4. Akıllı Telefon Aksesuarları
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12466532031",  # 5. Ev ve Mutfak Ürünleri
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=27154563031"   # 6. Bıçaklar ve Hırdavat Ürünleri
 ]
 
 GONDERILEN_URUNLER = set()
