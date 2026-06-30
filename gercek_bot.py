@@ -24,8 +24,7 @@ def fiyatı_sayiya_cevir(fiyat_metni):
         return None
     try:
         temiz = fiyat_metni.replace("TL", "").replace("TL\xa0", "").strip()
-        temiz = temiz.replace(".", "")
-        temiz = temiz.replace(",", ".")
+        temiz = temiz.replace(".", "").replace(",", ".")
         return float(temiz)
     except:
         return None
@@ -34,20 +33,19 @@ def amazon_vitrin_tara():
     print("🛠️ Amazon Özel El Aletleri Vitrini Taranıyor...")
     
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
         "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Accept-Encoding": "gzip, deflate, br",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Referer": "https://www.amazon.com.tr/"
     }
     
     try:
         cevap = requests.get(HEDEF_URL, headers=headers)
         if cevap.status_code != 200:
-            print(f"⚠️ Amazon sayfayı vermedi (Hata Kodu: {cevap.status_code}). 10 dakika sonra tekrar denenecek.")
+            print(f"⚠️ Amazon sayfayı vermedi (Hata Kodu: {cevap.status_code}).")
             return
             
         soup = BeautifulSoup(cevap.content, "html.parser")
-        
         urunler = soup.find_all("div", {"data-component-type": "s-search-result"})
         if not urunler:
             urunler = soup.find_all("div", class_="s-result-item")
@@ -87,12 +85,13 @@ def amazon_vitrin_tara():
                 if guncel_fiyat and eski_fiyat and eski_fiyat > guncel_fiyat:
                     indirim_orani = ((eski_fiyat - guncel_fiyat) / eski_fiyat) * 100
                     
-                    if indirim_orani >= 1:
+                    # BURASI DEĞİŞTİ: Artık %5 ve üzeri indirimleri yakalar
+                    if indirim_orani >= 5:
                         bulunan_indirimler += 1
                         GONDERILEN_URUNLER.add(asin)
                         
                         mesaj = (
-                            f"⚙️ **GERÇEK İNDİRİM YAKALANDI! (% {int(indirim_orani)} İndirim)**\n\n"
+                            f"⚙️ **İNDİRİM YAKALANDI! (% {int(indirim_orani)} İndirim)**\n\n"
                             f"📦 **Ürün:** {urun_adi[:85]}...\n"
                             f"❌ **Eski Fiyat:** {eski_fiyat:,.2f} TL\n"
                             f"✅ **İndirimli Fiyat:** {guncel_fiyat:,.2f} TL\n\n"
@@ -100,14 +99,13 @@ def amazon_vitrin_tara():
                         )
                         telegram_mesaj_gonder(mesaj)
                         time.sleep(1.5)
-                        
             except:
                 continue
                 
-        print(f"✅ Tarama bitti. Şartlara uyan {bulunan_indirimler} yeni el aleti fırsatı Telegram'a yollandı.")
+        print(f"✅ Tarama bitti. %5 ve üzeri şartına uyan {bulunan_indirimler} yeni el aleti fırsatı tespit edildi.")
 
     except Exception as e:
         print(f"Sistem hatası: {e}")
+
 if __name__ == "__main__":
     amazon_vitrin_tara()
-    
