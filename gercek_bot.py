@@ -6,8 +6,8 @@ import time
 TELEGRAM_TOKEN = "8546144054:AAGUDXlQSWuKV9rY88njCc9CFGPuG9aL_A0"
 CHAT_ID = "1032063964"
 
-# El Aletleri Kategorisi Vitrin Linki
-HEDEF_URL = "https://www.amazon.com.tr/b/?_encoding=UTF8&node=27149247031&bbn=12466724031&ref_=Oct_d_odnav_d_12707166031_6&pd_rd_w=ESo5L&content-id=amzn1.sym.0af4f910-f596-42af-95bd-e59dfcd894f8&pf_rd_p=0af4f910-f596-42af-95bd-e59dfcd894f8&pf_rd_r=6SAEW3T6SZ3E4D5SF6NF&pd_rd_wg=GiYRw&pd_rd_r=0418b2b1-6712-4c29-b037-cd29c4c71712"
+# YENİ HEDEF: Amazon Genelindeki %5 ve Üzeri Tüm İndirimli Ürünler Arama Sayfası
+HEDEF_URL = "https://www.amazon.com.tr/s?k=f%C4%B1rsat&pct-off=5-"
 
 GONDERILEN_URUNLER = set()
 
@@ -30,7 +30,7 @@ def fiyatı_sayiya_cevir(fiyat_metni):
         return None
 
 def amazon_vitrin_tara():
-    print("🛠️ Amazon Özel El Aletleri Vitrini Taranıyor...")
+    print("🛠️ Amazon Genel Fırsatlar Sayfası Taranıyor...")
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -85,13 +85,13 @@ def amazon_vitrin_tara():
                 if guncel_fiyat and eski_fiyat and eski_fiyat > guncel_fiyat:
                     indirim_orani = ((eski_fiyat - guncel_fiyat) / eski_fiyat) * 100
                     
-                    # BURASI DEĞİŞTİ: Artık %5 ve üzeri indirimleri yakalar
+                    # %5 ve üzeri kontrolü
                     if indirim_orani >= 5:
                         bulunan_indirimler += 1
                         GONDERILEN_URUNLER.add(asin)
                         
                         mesaj = (
-                            f"⚙️ **İNDİRİM YAKALANDI! (% {int(indirim_orani)} İndirim)**\n\n"
+                            f"🔥 **AMAZON GENEL İNDİRİMİ YAKALANDI! (% {int(indirim_orani)} İndirim)**\n\n"
                             f"📦 **Ürün:** {urun_adi[:85]}...\n"
                             f"❌ **Eski Fiyat:** {eski_fiyat:,.2f} TL\n"
                             f"✅ **İndirimli Fiyat:** {guncel_fiyat:,.2f} TL\n\n"
@@ -102,7 +102,7 @@ def amazon_vitrin_tara():
             except:
                 continue
                 
-        print(f"✅ Tarama bitti. %5 ve üzeri şartına uyan {bulunan_indirimler} yeni el aleti fırsatı tespit edildi.")
+        print(f"✅ Tarama bitti. Sitede şartlara uyan {bulunan_indirimler} yeni genel fırsat tespit edildi.")
 
     except Exception as e:
         print(f"Sistem hatası: {e}")
