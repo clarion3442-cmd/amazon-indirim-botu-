@@ -6,13 +6,16 @@ import time
 TELEGRAM_TOKEN = "8546144054:AAGUDXlQSWuKV9rY88njCc9CFGPuG9aL_A0"
 CHAT_ID = "1032063964"
 
-# GÜVENLİ LİNKLER: Sadece sorunsuz çalışan (200 döndüren) vitrin linkleri
+# SENİN GÖNDERDİĞİN LİNKLER (Güvenli hale getirilmiş ve temizlenmiş liste)
 HEDEF_URLLER = [
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=27149247031",  # 1. El Aletleri
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12466724031",  # 2. Yapı Market Ana Sayfa
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12601898031"   # 3. Bilgisayar ve Bileşenleri
+    "https://www.amazon.com.tr/b/?node=13709879031",  # 1. Elektronik / Kulaklık & Aksesuar (Dönüştürüldü 🛡️)
+    "https://www.amazon.com.tr/s?k=decathlon&i=sports", # 2. Decathlon Spor Ürünleri (Arama Linki ⚠️)
+    "https://www.amazon.com.tr/s?k=drone&rh=n%3A12466496031", # 3. Dronlar (Arama Linki ⚠️)
+    "https://www.amazon.com.tr/b/?node=13709924031",  # 4. Diğer Elektronik Grubu (Dönüştürüldü 🛡️)
+    "https://www.amazon.com.tr/b/?node=13484282031"   # 5. Mutfak ve Yemek Gereçleri (Dönüştürüldü 🛡️)
 ]
 
+# Ziyaret edilen ürünleri hafızada tutarak Telegram'a tekrar mesaj atmasını engeller
 GONDERILEN_URUNLER = set()
 
 def telegram_mesaj_gonder(mesaj):
@@ -34,7 +37,7 @@ def fiyatı_sayiya_cevir(fiyat_metni):
         return None
 
 def amazon_vitrin_tara():
-    print(f"🛠️ Toplam {len(HEDEF_URLLER)} farklı Amazon kategorisi taranıyor...")
+    print(f"🛠️ Toplam {len(HEDEF_URLLER)} farklı Amazon sayfası sırayla taranıyor...")
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -46,11 +49,11 @@ def amazon_vitrin_tara():
     toplam_bulunan = 0
 
     for sira, url in enumerate(HEDEF_URLLER, 1):
-        print(f"👉 {sira}. Kategori taranıyor...")
+        print(f"👉 {sira}. Sayfa taranıyor...")
         try:
             cevap = requests.get(url, headers=headers)
             if cevap.status_code != 200:
-                print(f"⚠️ Amazon bu kategoriyi vermedi (Hata Kodu: {cevap.status_code}). Pas geçiliyor.")
+                print(f"⚠️ Amazon bu sayfayı vermedi (Hata Kodu: {cevap.status_code}). Pas geçiliyor.")
                 continue
                 
             soup = BeautifulSoup(cevap.content, "html.parser")
@@ -91,13 +94,13 @@ def amazon_vitrin_tara():
                     if guncel_fiyat and eski_fiyat and eski_fiyat > guncel_fiyat:
                         indirim_orani = ((eski_fiyat - guncel_fiyat) / eski_fiyat) * 100
                         
-                        # %5 ve üzeri kontrolü
+                        # %5 ve üzeri indirim kuralı
                         if indirim_orani >= 5:
                             toplam_bulunan += 1
                             GONDERILEN_URUNLER.add(asin)
                             
                             mesaj = (
-                                f"⚙️ **KATEGORİ İNDİRİMİ YAKALANDI! (% {int(indirim_orani)} İndirim)**\n\n"
+                                f"🔥 **YENİ FIRSAT YAKALANDI! (% {int(indirim_orani)} İndirim)**\n\n"
                                 f"📦 **Ürün:** {urun_adi[:85]}...\n"
                                 f"❌ **Eski Fiyat:** {eski_fiyat:,.2f} TL\n"
                                 f"✅ **İndirimli Fiyat:** {guncel_fiyat:,.2f} TL\n\n"
@@ -108,13 +111,13 @@ def amazon_vitrin_tara():
                 except:
                     continue
             
-            # BURASI DEĞİŞTİ: Bot yakalanmamak için sayfalar arası 8 saniye bekleyecek.
-            time.sleep(8)
+            # Amazon'u şüphelendirmemek için sayfalar arası 10 saniye boyunca derin bir uykuya dalıyoruz
+            time.sleep(10)
 
         except Exception as e:
-            print(f"Kategori taranırken hata oluştu: {e}")
+            print(f"Sayfa taranırken hata oluştu: {e}")
             
-    print(f"✅ Tüm tarama bitti. Şartlara uyan {toplam_bulunan} yeni fırsat Telegram'a yollandı.")
+    print(f"✅ Tüm tarama bitti. Şartlara uyan {toplam_bulunan} yeni indirim Telegram'a yollandı.")
 
 if __name__ == "__main__":
     amazon_vitrin_tara()
