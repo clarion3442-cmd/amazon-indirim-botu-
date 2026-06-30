@@ -6,14 +6,11 @@ import time
 TELEGRAM_TOKEN = "8546144054:AAGUDXlQSWuKV9rY88njCc9CFGPuG9aL_A0"
 CHAT_ID = "1032063964"
 
-# GÜVENLİ LİNKLER: Amazon'un engellemediği kategori vitrin linkleri (/b/ formatı)
+# GÜVENLİ LİNKLER: Sadece sorunsuz çalışan (200 döndüren) vitrin linkleri
 HEDEF_URLLER = [
     "https://www.amazon.com.tr/b/?_encoding=UTF8&node=27149247031",  # 1. El Aletleri
     "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12466724031",  # 2. Yapı Market Ana Sayfa
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12601898031",  # 3. Bilgisayar ve Bileşenleri
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=13730623031",  # 4. Akıllı Telefon Aksesuarları
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12466532031",  # 5. Ev ve Mutfak Ürünleri
-    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=27154563031"   # 6. Bıçaklar ve Hırdavat Ürünleri
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12601898031"   # 3. Bilgisayar ve Bileşenleri
 ]
 
 GONDERILEN_URUNLER = set()
@@ -111,8 +108,8 @@ def amazon_vitrin_tara():
                 except:
                     continue
             
-            # Kategoriler arası geçiş yaparken Amazon'u şüphelendirmemek için kısa bir mola
-            time.sleep(2)
+            # BURASI DEĞİŞTİ: Bot yakalanmamak için sayfalar arası 8 saniye bekleyecek.
+            time.sleep(8)
 
         except Exception as e:
             print(f"Kategori taranırken hata oluştu: {e}")
