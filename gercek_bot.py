@@ -6,8 +6,12 @@ import time
 TELEGRAM_TOKEN = "8546144054:AAGUDXlQSWuKV9rY88njCc9CFGPuG9aL_A0"
 CHAT_ID = "1032063964"
 
-# YENİ HEDEF: Amazon Genelindeki %5 ve Üzeri Tüm İndirimli Ürünler Arama Sayfası
-HEDEF_URL = "https://www.amazon.com.tr/s?k=f%C4%B1rsat&pct-off=5-"
+# GÜVENLİ LİNKLER: Amazon'un engellemediği kategori vitrin linkleri (/b/ formatı)
+# İleride beğendiğin kategorilerin linklerini aralarına virgül koyarak bu listeye ekleyebilirsin.
+HEDEF_URLLER = [
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=27149247031",  # El Aletleri
+    "https://www.amazon.com.tr/b/?_encoding=UTF8&node=12466724031"   # Yapı Market Ana Sayfa
+]
 
 GONDERILEN_URUNLER = set()
 
@@ -30,7 +34,7 @@ def fiyatı_sayiya_cevir(fiyat_metni):
         return None
 
 def amazon_vitrin_tara():
-    print("🛠️ Amazon Genel Fırsatlar Sayfası Taranıyor...")
+    print(f"🛠️ Toplam {len(HEDEF_URLLER)} farklı Amazon kategorisi taranıyor...")
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -39,73 +43,78 @@ def amazon_vitrin_tara():
         "Referer": "https://www.amazon.com.tr/"
     }
     
-    try:
-        cevap = requests.get(HEDEF_URL, headers=headers)
-        if cevap.status_code != 200:
-            print(f"⚠️ Amazon sayfayı vermedi (Hata Kodu: {cevap.status_code}).")
-            return
-            
-        soup = BeautifulSoup(cevap.content, "html.parser")
-        urunler = soup.find_all("div", {"data-component-type": "s-search-result"})
-        if not urunler:
-            urunler = soup.find_all("div", class_="s-result-item")
-        
-        bulunan_indirimler = 0
+    toplam_bulunan = 0
 
-        for urun in urunler:
-            try:
-                baslik_etiketi = urun.find("h2")
-                if not baslik_etiketi: continue
-                
-                urun_adi = baslik_etiketi.text.strip()
-                link_etiketi = baslik_etiketi.find("a")
-                if not link_etiketi: continue
-                urun_link = "https://www.amazon.com.tr" + link_etiketi["href"]
-                
-                asin = urun.get("data-asin")
-                if not asin:
-                    if "/dp/" in urun_link:
-                        asin = urun_link.split("/dp/")[1].split("/")[0]
-                    else:
-                        asin = urun_adi
-                
-                if asin in GONDERILEN_URUNLER: continue
-
-                fiyat_kapsayici = urun.find("span", class_="a-price")
-                if not fiyat_kapsayici: continue
-                guncel_fiyat_metni = fiyat_kapsayici.find("span", class_="a-offscreen").text.strip()
-                
-                eski_fiyat_kapsayici = urun.find("span", class_="a-text-price")
-                if not eski_fiyat_kapsayici: continue
-                eski_fiyat_metni = eski_fiyat_kapsayici.find("span", class_="a-offscreen").text.strip()
-
-                guncel_fiyat = fiyatı_sayiya_cevir(guncel_fiyat_metni)
-                eski_fiyat = fiyatı_sayiya_cevir(eski_fiyat_metni)
-
-                if guncel_fiyat and eski_fiyat and eski_fiyat > guncel_fiyat:
-                    indirim_orani = ((eski_fiyat - guncel_fiyat) / eski_fiyat) * 100
-                    
-                    # %5 ve üzeri kontrolü
-                    if indirim_orani >= 5:
-                        bulunan_indirimler += 1
-                        GONDERILEN_URUNLER.add(asin)
-                        
-                        mesaj = (
-                            f"🔥 **AMAZON GENEL İNDİRİMİ YAKALANDI! (% {int(indirim_orani)} İndirim)**\n\n"
-                            f"📦 **Ürün:** {urun_adi[:85]}...\n"
-                            f"❌ **Eski Fiyat:** {eski_fiyat:,.2f} TL\n"
-                            f"✅ **İndirimli Fiyat:** {guncel_fiyat:,.2f} TL\n\n"
-                            f"🔗 **Ürün Linki:**\n{urun_link}"
-                        )
-                        telegram_mesaj_gonder(mesaj)
-                        time.sleep(1.5)
-            except:
+    for sira, url in enumerate(HEDEF_URLLER, 1):
+        print(f"👉 {sira}. Kategori taranıyor...")
+        try:
+            cevap = requests.get(url, headers=headers)
+            if cevap.status_code != 200:
+                print(f"⚠️ Amazon bu kategoriyi vermedi (Hata Kodu: {cevap.status_code}). Pas geçiliyor.")
                 continue
                 
-        print(f"✅ Tarama bitti. Sitede şartlara uyan {bulunan_indirimler} yeni genel fırsat tespit edildi.")
+            soup = BeautifulSoup(cevap.content, "html.parser")
+            urunler = soup.find_all("div", {"data-component-type": "s-search-result"})
+            if not urunler:
+                urunler = soup.find_all("div", class_="s-result-item")
+            
+            for urun in urunler:
+                try:
+                    baslik_etiketi = urun.find("h2")
+                    if not baslik_etiketi: continue
+                    
+                    urun_adi = baslik_etiketi.text.strip()
+                    link_etiketi = baslik_etiketi.find("a")
+                    if not link_etiketi: continue
+                    urun_link = "https://www.amazon.com.tr" + link_etiketi["href"]
+                    
+                    asin = urun.get("data-asin")
+                    if not asin:
+                        if "/dp/" in urun_link:
+                            asin = urun_link.split("/dp/")[1].split("/")[0]
+                        else:
+                            asin = urun_adi
+                    
+                    if asin in GONDERILEN_URUNLER: continue
 
-    except Exception as e:
-        print(f"Sistem hatası: {e}")
+                    fiyat_kapsayici = urun.find("span", class_="a-price")
+                    if not fiyat_kapsayici: continue
+                    guncel_fiyat_metni = fiyat_kapsayici.find("span", class_="a-offscreen").text.strip()
+                    
+                    eski_fiyat_kapsayici = urun.find("span", class_="a-text-price")
+                    if not eski_fiyat_kapsayici: continue
+                    eski_fiyat_metni = eski_fiyat_kapsayici.find("span", class_="a-offscreen").text.strip()
+
+                    guncel_fiyat = fiyatı_sayiya_cevir(guncel_fiyat_metni)
+                    eski_fiyat = fiyatı_sayiya_cevir(eski_fiyat_metni)
+
+                    if guncel_fiyat and eski_fiyat and eski_fiyat > guncel_fiyat:
+                        indirim_orani = ((eski_fiyat - guncel_fiyat) / eski_fiyat) * 100
+                        
+                        # %5 ve üzeri kontrolü
+                        if indirim_orani >= 5:
+                            toplam_bulunan += 1
+                            GONDERILEN_URUNLER.add(asin)
+                            
+                            mesaj = (
+                                f"⚙️ **KATEGORİ İNDİRİMİ YAKALANDI! (% {int(indirim_orani)} İndirim)**\n\n"
+                                f"📦 **Ürün:** {urun_adi[:85]}...\n"
+                                f"❌ **Eski Fiyat:** {eski_fiyat:,.2f} TL\n"
+                                f"✅ **İndirimli Fiyat:** {guncel_fiyat:,.2f} TL\n\n"
+                                f"🔗 **Ürün Linki:**\n{urun_link}"
+                            )
+                            telegram_mesaj_gonder(mesaj)
+                            time.sleep(1.5)
+                except:
+                    continue
+            
+            # Kategoriler arası geçiş yaparken Amazon'u şüphelendirmemek için kısa bir mola
+            time.sleep(2)
+
+        except Exception as e:
+            print(f"Kategori taranırken hata oluştu: {e}")
+            
+    print(f"✅ Tüm tarama bitti. Şartlara uyan {toplam_bulunan} yeni fırsat Telegram'a yollandı.")
 
 if __name__ == "__main__":
     amazon_vitrin_tara()
